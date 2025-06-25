@@ -32,5 +32,6 @@ itemfromid = [
     "trapped_ajilenakh_2",
     "weasel",
     "digging_weasel",
+    "tricolor_jelly",
     "harvester"
 ]
