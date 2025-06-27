@@ -24,7 +24,7 @@ class Game():
         self.__clock = pg.time.Clock()
         
         # TEMP below
-        self.__load_level("l1")
+        self.__load_level("test")
         # TEMP above
         
         while self.__running:
