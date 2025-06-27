@@ -171,6 +171,35 @@ class Game():
             pass
         else:
             grid_square_size = self.__grid_size // len(self.__current_level["board"])
+            
+            # RENDER TRAIL VISUALIZATION
+            # NOTE: the following code only allows for the trail to be one color (whatever type of
+            # trail is currently tracked at the trail head. The trail should be split at any
+            # tricolor jelly spaces and have each piece (including the tcj space in both pieces)
+            # render a separate trail visualization of the appropriate color.
+            trail_coords = []
+            for grid_square in self.__trail:
+                # self.__trail points are stored as (row, col), which is (y, x), but these coords need to be (x, y)
+                coords = (
+                    grid_square[1] * grid_square_size + self.__grid_offset[0] + 0.5*grid_square_size,
+                    grid_square[0] * grid_square_size + self.__grid_offset[1] + 0.5*grid_square_size
+                )
+                trail_coords.append(coords)
+
+            i = 0
+            while i < len(trail_coords) - 1:
+                trail_color = ( k.color[self.__trail_type] ) if ( self.__trail_type is not None ) else ( (0, 0, 0) )
+                trail_width = ( 20 ) if ( trail_coords[i][0] == trail_coords[i+1][0] or trail_coords[i][1] == trail_coords[i+1][1] ) else ( int(20 * k.sqrt2) )
+                pg.draw.line(
+                    surface   = self.__window,
+                    color     = trail_color,
+                    start_pos = trail_coords[i],
+                    end_pos   = trail_coords[i + 1],
+                    width     = trail_width
+                )
+                i += 1
+
+            # RENDER GRID ITEMS
             for r, row in enumerate(self.__current_level["board"]):
                 for c, cell in enumerate(row):
                     rect = (

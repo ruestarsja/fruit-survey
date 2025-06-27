@@ -4,7 +4,7 @@ color = {
     "harvester": (225, 225, 225),
     "rock": (175, 170, 160),
     "henna": (210, 60, 90),
-    "sweet": (240, 190, 60),
+    "sweet": (220, 170, 40),
     "ajilenakh": (153, 165, 58)
 }
 
@@ -35,3 +35,9 @@ itemfromid = [
     "tricolor_jelly",
     "harvester"
 ]
+
+from math import sqrt
+
+sqrt2 = sqrt(2)
+
+del sqrt
