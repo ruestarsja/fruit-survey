@@ -188,7 +188,7 @@ class Game():
 
             i = 0
             while i < len(trail_coords) - 1:
-                trail_color = ( k.color[self.__trail_type] ) if ( self.__trail_type is not None ) else ( (0, 0, 0) )
+                trail_color = ( k.color[self.__trail_type] ) if ( self.__trail_type is not None ) else ( k.color["tricolor_jelly"] )
                 trail_width = ( 20 ) if ( trail_coords[i][0] == trail_coords[i+1][0] or trail_coords[i][1] == trail_coords[i+1][1] ) else ( int(20 * k.sqrt2) )
                 pg.draw.line(
                     surface   = self.__window,
