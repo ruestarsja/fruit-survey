@@ -12,7 +12,7 @@ class Game():
         self.__harvester_location:tuple|None = None
         self.__trail_head_location:tuple|None = None
         self.__trail:list|None = None
-        self.__trail_type:str|None = None
+        self.__trail_type_stack:list|None = None
 
         resolution = (k.default_resolution, 0.75*k.default_resolution)
         self.__window:pg.Surface = pg.display.set_mode(resolution)
@@ -62,6 +62,7 @@ class Game():
             i += 1
         self.__trail_head_location = self.__harvester_location
         self.__trail = [self.__harvester_location]
+        self.__trail_type_stack = []
     
     def __unload_level(self):
         self.__current_level = None
@@ -69,17 +70,14 @@ class Game():
         self.__harvester_location = None
         self.__trail_head_location = None
         self.__trail = None
+        self.__trail_type_stack = None
     
     def __process_click(self, mousepos):
         clicked = self.__get_object_from_pos(mousepos)
         if clicked[0] == "grid_square":
             grid_square_loc = clicked[1]
             if self.__is_adjacent_to_trail_head(grid_square_loc):
-                print("Clicked adjacent to trail head!")
-                if grid_square_loc in self.__trail:
-                    print("Already visited space.")
-                else:
-                    print("New space!")
+                if not (grid_square_loc in self.__trail):
                     new:str = k.itemfromid[self.__board[grid_square_loc[0]][grid_square_loc[1]]]
                     blacklist = [
                         "rock",
@@ -92,7 +90,7 @@ class Game():
                     ]
                     whitelist = [
                         "weasel",
-                        "digging_weasel"
+                        "digging_weasel",
                         "tricolor_jelly"
                     ]
                     trail_types = [
@@ -100,49 +98,27 @@ class Game():
                         "sweet",
                         "ajilenakh"
                     ]
-                    if self.__trail_type is None:
+                    if len(self.__trail_type_stack) == 0 or self.__trail_type_stack[-1] is None:
                         if new not in blacklist:
                             self.__trail_head_location = grid_square_loc
                             self.__trail.append(self.__trail_head_location)
                             if new in trail_types:
-                                self.__trail_type = new
-                                print(f"New trail type: {new}")
+                                self.__trail_type_stack.append(new)
                             else:
-                                print("No new trail type.")
-                        else:
-                            print("Cannot use that type of grid square.")
-                    elif self.__trail_type == new or new in whitelist:
+                                self.__trail_type_stack.append(None)
+                    elif self.__trail_type_stack[-1] == new or new in whitelist:
                         self.__trail_head_location = grid_square_loc
                         self.__trail.append(self.__trail_head_location)
                         if new == "tricolor_jelly":
-                            self.__trail_type = None
-                            print("Tricolor jelly!!")
+                            self.__trail_type_stack.append(None)
                         else:
-                            print("Moving to new matching fruit!")
-                    else:
-                        print("Wrong type of space for this trail type.")
-                print(self.__trail)
+                            self.__trail_type_stack.append(self.__trail_type_stack[-1])
             elif grid_square_loc == self.__trail_head_location:
-                if grid_square_loc == self.__harvester_location:
-                    print("Can't undo further: reached harvester location.")
-                else:
+                if grid_square_loc != self.__harvester_location:
                     self.__trail.pop()
-                    print(self.__trail)
-                    print(self.__trail[-1])
                     self.__trail_head_location = self.__trail[-1]
-                    print(self.__trail_head_location)
                     current = k.itemfromid[self.__board[self.__trail_head_location[0]][self.__trail_head_location[1]]]
-                    if current in ("harvester", "tricolor_jelly"):
-                        self.__trail_type = None
-                        print("Backed onto tricolor jelly or harvester!")
-                    else:
-                        print("Undone.")
-                        print(self.__trail)
-                        print(self.__trail_head_location)
-            else:
-                print("Clicked on non-adjacent grid square.")
-        else:
-            print("Clicked on nothing.")
+                    self.__trail_type_stack.pop()
 
     def __get_object_from_pos(self, pos):
         if self.__current_level == None:
@@ -172,11 +148,6 @@ class Game():
         else:
             grid_square_size = self.__grid_size // len(self.__current_level["board"])
             
-            # RENDER TRAIL VISUALIZATION
-            # NOTE: the following code only allows for the trail to be one color (whatever type of
-            # trail is currently tracked at the trail head. The trail should be split at any
-            # tricolor jelly spaces and have each piece (including the tcj space in both pieces)
-            # render a separate trail visualization of the appropriate color.
             trail_coords = []
             for grid_square in self.__trail:
                 # self.__trail points are stored as (row, col), which is (y, x), but these coords need to be (x, y)
@@ -188,8 +159,21 @@ class Game():
 
             i = 0
             while i < len(trail_coords) - 1:
-                trail_color = ( k.color[self.__trail_type] ) if ( self.__trail_type is not None ) else ( k.color["tricolor_jelly"] )
-                trail_width = ( 20 ) if ( trail_coords[i][0] == trail_coords[i+1][0] or trail_coords[i][1] == trail_coords[i+1][1] ) else ( int(20 * k.sqrt2) )
+                
+                if self.__trail_type_stack[-1] is None:
+                    trail_color = k.color["tricolor_jelly"]
+                elif (i - 1 >= 0) and (self.__trail_type_stack[i-1] is not None):
+                    trail_color = k.color[self.__trail_type_stack[i-1]]
+                elif self.__trail_type_stack[i] is not None:
+                    trail_color = k.color[self.__trail_type_stack[i]]
+                else:
+                    trail_color = k.color["tricolor_jelly"]
+                
+                if trail_coords[i][0] == trail_coords[i+1][0] or trail_coords[i][1] == trail_coords[i+1][1]:
+                    trail_width = 20
+                else:
+                    trail_width = int(20 * k.sqrt2)
+
                 pg.draw.line(
                     surface   = self.__window,
                     color     = trail_color,
@@ -219,7 +203,7 @@ class Game():
     def __fetch_sprite(self, item:str):
         return k.Sprite("images" + os.sep + item + ".png")
 
-def main():
+def main():#
     game = Game()
     game.run()
 
