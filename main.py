@@ -148,11 +148,6 @@ class Game():
         else:
             grid_square_size = self.__grid_size // len(self.__current_level["board"])
             
-            # RENDER TRAIL VISUALIZATION
-            # NOTE: the following code only allows for the trail to be one color (whatever type of
-            # trail is currently tracked at the trail head. The trail should be split at any
-            # tricolor jelly spaces and have each piece (including the tcj space in both pieces)
-            # render a separate trail visualization of the appropriate color.
             trail_coords = []
             for grid_square in self.__trail:
                 # self.__trail points are stored as (row, col), which is (y, x), but these coords need to be (x, y)
@@ -164,9 +159,21 @@ class Game():
 
             i = 0
             while i < len(trail_coords) - 1:
-                # rewrite to color each step of the trail differently, as needed
-                trail_color = ( k.color[self.__trail_type_stack[-1]] ) if ( self.__trail_type_stack[-1] is not None ) else ( k.color["tricolor_jelly"] )
-                trail_width = ( 20 ) if ( trail_coords[i][0] == trail_coords[i+1][0] or trail_coords[i][1] == trail_coords[i+1][1] ) else ( int(20 * k.sqrt2) )
+                
+                if self.__trail_type_stack[-1] is None:
+                    trail_color = k.color["tricolor_jelly"]
+                elif (i - 1 >= 0) and (self.__trail_type_stack[i-1] is not None):
+                    trail_color = k.color[self.__trail_type_stack[i-1]]
+                elif self.__trail_type_stack[i] is not None:
+                    trail_color = k.color[self.__trail_type_stack[i]]
+                else:
+                    trail_color = k.color["tricolor_jelly"]
+                
+                if trail_coords[i][0] == trail_coords[i+1][0] or trail_coords[i][1] == trail_coords[i+1][1]:
+                    trail_width = 20
+                else:
+                    trail_width = int(20 * k.sqrt2)
+
                 pg.draw.line(
                     surface   = self.__window,
                     color     = trail_color,
